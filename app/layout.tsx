@@ -16,7 +16,7 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'Hello Ward Adyaksh Portal',
+  title: 'Hello Mayor Portal',
   description: 'Transparent Governance, Empowered Citizens - Ward Administration Portal of Nepal Municipality',
   generator: 'v0.app',
   keywords: ['ward', 'adyaksh', 'nepal', 'municipality', 'government', 'portal', 'civic'],

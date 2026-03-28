@@ -66,7 +66,7 @@ export function HeroSection() {
       {/* Nepal Flag - Desktop */}
       <div className="absolute top-32 right-8 lg:right-24 hidden md:block">
         <div>
-          <img src="/nepal-flag.gif" alt="Nepal Flag" width={32} height={40} />
+          <img src="/nepal-flag.gif" alt="Nepal Flag" className="w-14 h-auto" />
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export function HeroSection() {
             <img
               src="/nepal-flag.gif"
               alt="Nepal Flag"
-              className="w-5 h-auto md:hidden"
+              className="w-8 h-auto md:hidden"
             />
           </div>
 
@@ -132,7 +132,9 @@ export function HeroSection() {
           {quickLinks.map((item) => (
             <Link key={item.href} href={item.href}>
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 text-center group border border-[#003893]/10 shadow-sm hover:shadow-lg hover:border-[#DC143C]/20 transition-all hover:scale-105">
-                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white mb-3 shadow-md`}>
+                <div
+                  className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white mb-3 shadow-md`}
+                >
                   <item.icon className="h-6 w-6" />
                 </div>
                 <p className="text-sm font-semibold text-[#003893] group-hover:text-[#DC143C] transition-colors">

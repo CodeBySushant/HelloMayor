@@ -25,7 +25,7 @@ export const translations: Translations = {
   
   // Hero
   welcome: { en: "Welcome to", ne: "स्वागत छ" },
-  portalName: { en: "Hello Ward Adyaksh Portal", ne: "हेलो वडा अध्यक्ष पोर्टल" },
+  portalName: { en: "Hello Mayor Portal", ne: "हेलो वडा अध्यक्ष पोर्टल" },
   heroSubtitle: { 
     en: "Transparent Governance, Empowered Citizens", 
     ne: "पारदर्शी शासन, सशक्त नागरिक" 
