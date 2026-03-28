@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { useLanguage } from "@/lib/language-context"
-import { NepalFlag } from "@/components/nepal-flag"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/language-context";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
   Menu,
   X,
@@ -14,15 +14,15 @@ import {
   FileText,
   MessageSquareWarning,
   Phone,
-  Image,
+  Image as ImageIcon,
   BarChart3,
   Hammer,
   Settings,
-} from "lucide-react"
+} from "lucide-react";
 
 export function Header() {
-  const { language, setLanguage, t } = useLanguage()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { language, setLanguage, t } = useLanguage();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
     { href: "/", label: t("home"), icon: Home },
@@ -33,7 +33,7 @@ export function Header() {
     { href: "/gallery", label: t("gallery"), icon: Image },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
     { href: "/contact", label: t("contact"), icon: Phone },
-  ]
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white/95 via-[#003893]/5 to-white/95 backdrop-blur-xl border-b border-[#003893]/10 shadow-sm">
@@ -41,14 +41,19 @@ export function Header() {
         <div className="flex h-18 items-center justify-between py-2">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <motion.div 
+            <motion.div
               className="relative"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-br from-[#DC143C]/20 to-[#003893]/20 blur-sm group-hover:blur-md transition-all" />
               <div className="relative bg-white rounded-lg p-1.5 shadow-sm border border-[#003893]/10">
-                <NepalFlag size={32} animate={false} />
+                <img
+                  src="/nepal-flag.gif"
+                  alt="Nepal Flag"
+                  width={32}
+                  height={40}
+                />
               </div>
             </motion.div>
             <div className="hidden sm:block">
@@ -87,8 +92,8 @@ export function Header() {
               <button
                 onClick={() => setLanguage("en")}
                 className={`relative px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
-                  language === "en" 
-                    ? "text-white" 
+                  language === "en"
+                    ? "text-white"
                     : "text-[#003893]/70 hover:text-[#003893]"
                 }`}
               >
@@ -104,8 +109,8 @@ export function Header() {
               <button
                 onClick={() => setLanguage("ne")}
                 className={`relative px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
-                  language === "ne" 
-                    ? "text-white" 
+                  language === "ne"
+                    ? "text-white"
                     : "text-[#003893]/70 hover:text-[#003893]"
                 }`}
               >
@@ -211,5 +216,5 @@ export function Header() {
         )}
       </AnimatePresence>
     </header>
-  )
+  );
 }

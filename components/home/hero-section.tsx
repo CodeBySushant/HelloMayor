@@ -1,59 +1,64 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { useLanguage } from "@/lib/language-context"
-import { NepalFlag } from "@/components/nepal-flag"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, MessageSquareWarning, Bell, FileText, Phone } from "lucide-react"
-import Link from "next/link"
+import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/language-context";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowRight,
+  MessageSquareWarning,
+  Bell,
+  FileText,
+  Phone,
+} from "lucide-react";
+import Link from "next/link";
 
 export function HeroSection() {
-  const { t, language } = useLanguage()
+  const { t, language } = useLanguage();
 
   const quickLinks = [
-    { 
-      icon: MessageSquareWarning, 
-      label: t("fileComplaint"), 
-      href: "/complaints", 
+    {
+      icon: MessageSquareWarning,
+      label: t("fileComplaint"),
+      href: "/complaints",
       gradient: "from-[#DC143C] to-[#DC143C]/80",
-      description: language === "en" ? "Submit issues" : "समस्या पेश गर्नुहोस्"
+      description: language === "en" ? "Submit issues" : "समस्या पेश गर्नुहोस्",
     },
-    { 
-      icon: Bell, 
-      label: t("viewNotices"), 
-      href: "/notices", 
+    {
+      icon: Bell,
+      label: t("viewNotices"),
+      href: "/notices",
       gradient: "from-[#003893] to-[#003893]/80",
-      description: language === "en" ? "Latest updates" : "नयाँ अपडेट"
+      description: language === "en" ? "Latest updates" : "नयाँ अपडेट",
     },
-    { 
-      icon: FileText, 
-      label: t("readBlogs"), 
-      href: "/blogs", 
+    {
+      icon: FileText,
+      label: t("readBlogs"),
+      href: "/blogs",
       gradient: "from-[#DC143C] to-[#003893]",
-      description: language === "en" ? "News & stories" : "समाचार र कथा"
+      description: language === "en" ? "News & stories" : "समाचार र कथा",
     },
-    { 
-      icon: Phone, 
-      label: t("contactUs"), 
-      href: "/contact", 
+    {
+      icon: Phone,
+      label: t("contactUs"),
+      href: "/contact",
       gradient: "from-[#003893] to-[#DC143C]",
-      description: language === "en" ? "Get in touch" : "सम्पर्क गर्नुहोस्"
+      description: language === "en" ? "Get in touch" : "सम्पर्क गर्नुहोस्",
     },
-  ]
+  ];
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#003893]/[0.03] via-white to-[#DC143C]/[0.03]" />
-      
+
       {/* Subtle grid pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.015]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23003893' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23003893' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}
       />
-      
+
       {/* Animated gradient blurs */}
       <motion.div
         className="absolute top-32 right-20 h-80 w-80 rounded-full bg-[#DC143C]/8 blur-3xl"
@@ -82,7 +87,7 @@ export function HeroSection() {
       />
 
       {/* Nepal Flag - Desktop */}
-      <motion.div 
+      <motion.div
         className="absolute top-32 right-8 lg:right-24 hidden md:block"
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -92,7 +97,7 @@ export function HeroSection() {
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
-          <NepalFlag size={100} className="drop-shadow-xl" />
+          <img src="/nepal-flag.gif" alt="Nepal Flag" width={32} height={40} />
         </motion.div>
       </motion.div>
 
@@ -109,8 +114,14 @@ export function HeroSection() {
               <span className="absolute inline-flex h-full w-full rounded-full bg-[#DC143C] opacity-75 animate-ping" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#DC143C]" />
             </span>
-            <span className="text-sm font-medium text-[#003893]">{t("welcome")}</span>
-            <NepalFlag size={20} animate={false} className="md:hidden" />
+            <span className="text-sm font-medium text-[#003893]">
+              {t("welcome")}
+            </span>
+            <img
+              src="/nepal-flag.gif"
+              alt="Nepal Flag"
+              className="w-5 h-auto md:hidden"
+            />
           </motion.div>
 
           {/* Title */}
@@ -192,13 +203,17 @@ export function HeroSection() {
                 transition={{ delay: 0.8 + index * 0.1 }}
                 className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 text-center cursor-pointer group border border-[#003893]/10 shadow-sm hover:shadow-lg hover:border-[#DC143C]/20 transition-all"
               >
-                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white mb-3 group-hover:scale-110 transition-transform shadow-md`}>
+                <div
+                  className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white mb-3 group-hover:scale-110 transition-transform shadow-md`}
+                >
                   <item.icon className="h-6 w-6" />
                 </div>
                 <p className="text-sm font-semibold text-[#003893] group-hover:text-[#DC143C] transition-colors">
                   {item.label}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {item.description}
+                </p>
               </motion.div>
             </Link>
           ))}
@@ -218,7 +233,9 @@ export function HeroSection() {
           className="flex flex-col items-center gap-2"
         >
           <span className="text-xs text-muted-foreground">
-            {language === "en" ? "Scroll to explore" : "अन्वेषण गर्न स्क्रोल गर्नुहोस्"}
+            {language === "en"
+              ? "Scroll to explore"
+              : "अन्वेषण गर्न स्क्रोल गर्नुहोस्"}
           </span>
           <div className="h-8 w-5 rounded-full border-2 border-[#003893]/30 flex justify-center pt-1.5">
             <motion.div
@@ -230,5 +247,5 @@ export function HeroSection() {
         </motion.div>
       </motion.div>
     </section>
-  )
+  );
 }
