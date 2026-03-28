@@ -63,13 +63,6 @@ export function HeroSection() {
       <div className="absolute bottom-20 left-20 h-96 w-96 rounded-full bg-[#003893]/8 blur-2xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-[#DC143C]/5 blur-2xl" />
 
-      {/* Nepal Flag - Desktop */}
-      <div className="absolute top-32 right-8 lg:right-24 hidden md:block">
-        <div>
-          <img src="/nepal-flag.gif" alt="Nepal Flag" className="w-14 h-auto" />
-        </div>
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
@@ -89,10 +82,16 @@ export function HeroSection() {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
+          <h1 className="flex items-center justify-center gap-6 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
             <span className="bg-gradient-to-r from-[#DC143C] via-[#003893] to-[#DC143C] bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
               {t("portalName")}
             </span>
+
+            <img
+              src="/nepal-flag.gif"
+              alt="Nepal Flag"
+              className="w-20 h-auto"
+            />
           </h1>
 
           {/* Subtitle */}
