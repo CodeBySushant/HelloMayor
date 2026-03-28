@@ -149,7 +149,7 @@ export function HeroSection() {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+      {/* <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
         <div className="flex flex-col items-center gap-2 animate-bounce">
           <span className="text-xs text-muted-foreground">
             {language === "en"
@@ -160,7 +160,7 @@ export function HeroSection() {
             <div className="h-2 w-1 rounded-full bg-[#DC143C]" />
           </div>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }

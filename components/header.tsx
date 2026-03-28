@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/language-context";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Menu,
@@ -30,7 +29,7 @@ export function Header() {
     { href: "/blogs", label: t("blogs"), icon: FileText },
     { href: "/complaints", label: t("complaints"), icon: MessageSquareWarning },
     { href: "/development", label: t("development"), icon: Hammer },
-    { href: "/gallery", label: t("gallery"), icon: Image },
+    { href: "/gallery", label: t("gallery"), icon: ImageIcon },
     { href: "/reports", label: t("reports"), icon: BarChart3 },
     { href: "/contact", label: t("contact"), icon: Phone },
   ];
@@ -49,10 +48,9 @@ export function Header() {
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-br from-[#DC143C]/20 to-[#003893]/20 blur-sm group-hover:blur-md transition-all" />
               <div className="relative bg-white rounded-lg p-1.5 shadow-sm border border-[#003893]/10">
                 <img
-                  src="/nepal-flag.gif"
+                  src="/nepal-flag-icon.webp"
                   alt="Nepal Flag"
-                  width={32}
-                  height={40}
+                  className="w-8 h-auto"
                 />
               </div>
             </motion.div>
