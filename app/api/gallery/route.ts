@@ -4,12 +4,22 @@ import { NextResponse } from "next/server";
 const sql = neon(process.env.DATABASE_URL!);
 
 // ✅ GET
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const items = await sql`
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
+
+    let query = `
       SELECT * FROM gallery
-      ORDER BY is_featured DESC, sort_order ASC, created_at DESC
     `;
+
+    if (category && category !== "all") {
+      query += ` WHERE category = '${category}'`;
+    }
+
+    query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`;
+
+    const items = await sql.query(query);
 
     return NextResponse.json({ success: true, data: items });
   } catch (error) {
@@ -27,19 +37,32 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     const {
-      title,        
-      image_url,    
+      title_en,
+      title_np,
+      description_en,
+      description_np,
+      media_type,
+      media_url,
+      thumbnail_url,
+      category,
       is_featured,
-      sort_order
     } = body;
 
     const result = await sql`
-      INSERT INTO gallery (title, image_url, is_featured, sort_order)
+      INSERT INTO gallery (
+        title_en, title_np, description_en, description_np,
+        media_type, media_url, thumbnail_url, category, is_featured
+      )
       VALUES (
-        ${title},
-        ${image_url},
-        ${is_featured || false},
-        ${sort_order || 0}
+        ${title_en},
+        ${title_np || null},
+        ${description_en || null},
+        ${description_np || null},
+        ${media_type || 'image'},
+        ${media_url},
+        ${thumbnail_url || media_url},
+        ${category || 'general'},
+        ${is_featured || false}
       )
       RETURNING *
     `;

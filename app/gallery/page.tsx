@@ -1,28 +1,31 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useLanguage } from "@/lib/language-context"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Camera, X, ChevronLeft, ChevronRight, Play, Image as ImageIcon, Loader2 } from "lucide-react"
-import useSWR from "swr"
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/language-context";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Camera,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Image as ImageIcon,
+  Loader2,
+} from "lucide-react";
+import useSWR from "swr";
 
 interface GalleryItem {
-  id: number
-  title_en: string
-  title_np: string | null
-  description_en: string | null
-  description_np: string | null
-  media_type: string
-  media_url: string
-  category: string | null
-  is_featured: boolean
+  id: number;
+  title: string;
+  image_url: string;
+  is_featured: boolean;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const categories = [
   { id: "all", labelEn: "All", labelNe: "सबै" },
@@ -30,37 +33,44 @@ const categories = [
   { id: "events", labelEn: "Events", labelNe: "कार्यक्रम" },
   { id: "meetings", labelEn: "Meetings", labelNe: "बैठक" },
   { id: "community", labelEn: "Community", labelNe: "समुदाय" },
-]
+];
 
 export default function GalleryPage() {
-  const { language } = useLanguage()
-  const [activeCategory, setActiveCategory] = useState("all")
-  const [selectedItem, setSelectedItem] = useState<number | null>(null)
+  const { language } = useLanguage();
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
 
   const { data, isLoading } = useSWR<{ success: boolean; data: GalleryItem[] }>(
     `/api/gallery${activeCategory !== "all" ? `?category=${activeCategory}` : ""}`,
-    fetcher
-  )
+    fetcher,
+  );
 
-  const galleryItems = data?.data || []
+  const galleryItems = data?.data || [];
 
   const handleNext = () => {
     if (selectedItem !== null) {
-      const currentIndex = galleryItems.findIndex(item => item.id === selectedItem)
-      const nextIndex = (currentIndex + 1) % galleryItems.length
-      setSelectedItem(galleryItems[nextIndex].id)
+      const currentIndex = galleryItems.findIndex(
+        (item) => item.id === selectedItem,
+      );
+      const nextIndex = (currentIndex + 1) % galleryItems.length;
+      setSelectedItem(galleryItems[nextIndex].id);
     }
-  }
+  };
 
   const handlePrev = () => {
     if (selectedItem !== null) {
-      const currentIndex = galleryItems.findIndex(item => item.id === selectedItem)
-      const prevIndex = (currentIndex - 1 + galleryItems.length) % galleryItems.length
-      setSelectedItem(galleryItems[prevIndex].id)
+      const currentIndex = galleryItems.findIndex(
+        (item) => item.id === selectedItem,
+      );
+      const prevIndex =
+        (currentIndex - 1 + galleryItems.length) % galleryItems.length;
+      setSelectedItem(galleryItems[prevIndex].id);
     }
-  }
+  };
 
-  const selectedGalleryItem = galleryItems.find(item => item.id === selectedItem)
+  const selectedGalleryItem = galleryItems.find(
+    (item) => item.id === selectedItem,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#003893]/[0.02]">
@@ -123,7 +133,7 @@ export default function GalleryPage() {
 
           {/* Gallery Grid */}
           {!isLoading && galleryItems.length > 0 && (
-            <motion.div 
+            <motion.div
               layout
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
             >
@@ -142,16 +152,23 @@ export default function GalleryPage() {
                       index % 5 === 0 ? "md:col-span-2 md:row-span-2" : ""
                     }`}
                   >
-                    <div className={`bg-gradient-to-br from-[#003893]/20 to-[#DC143C]/20 ${
-                      index % 5 === 0 ? "aspect-square" : "aspect-video"
-                    } flex items-center justify-center`}>
+                    <div
+                      className={`bg-gradient-to-br from-[#003893]/20 to-[#DC143C]/20 ${
+                        index % 5 === 0 ? "aspect-square" : "aspect-video"
+                      } flex items-center justify-center`}
+                    >
                       {item.media_type === "video" ? (
-                        <div className="relative">
-                          <Play className="h-12 w-12 text-white/80" />
-                          <div className="absolute inset-0 bg-[#003893]/20 rounded-full animate-ping" />
-                        </div>
+                        <video
+                          src={item.media_url}
+                          className="w-full h-full object-cover"
+                          controls
+                        />
                       ) : (
-                        <ImageIcon className="h-12 w-12 text-[#003893]/30" />
+                        <img
+                          src={item.media_url}
+                          alt={item.title_en}
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </div>
                     {item.is_featured && (
@@ -162,7 +179,9 @@ export default function GalleryPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                       <div>
                         <p className="text-white font-medium text-sm">
-                          {language === "np" && item.title_np ? item.title_np : item.title_en}
+                          {language === "np" && item.title_np
+                            ? item.title_np
+                            : item.title_en}
                         </p>
                         {item.media_type === "video" && (
                           <span className="inline-flex items-center gap-1 text-white/80 text-xs mt-1">
@@ -186,7 +205,9 @@ export default function GalleryPage() {
             >
               <Camera className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
               <p className="text-muted-foreground">
-                {language === "en" ? "No media found in this category." : "यस वर्गमा कुनै मिडिया फेला परेन।"}
+                {language === "en"
+                  ? "No media found in this category."
+                  : "यस वर्गमा कुनै मिडिया फेला परेन।"}
               </p>
             </motion.div>
           )}
@@ -194,7 +215,10 @@ export default function GalleryPage() {
       </main>
 
       {/* Lightbox Dialog */}
-      <Dialog open={selectedItem !== null} onOpenChange={() => setSelectedItem(null)}>
+      <Dialog
+        open={selectedItem !== null}
+        onOpenChange={() => setSelectedItem(null)}
+      >
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
           <div className="relative">
             <Button
@@ -231,14 +255,14 @@ export default function GalleryPage() {
             {selectedGalleryItem && (
               <div className="p-6 text-center">
                 <h3 className="text-white text-xl font-semibold">
-                  {language === "np" && selectedGalleryItem.title_np 
-                    ? selectedGalleryItem.title_np 
+                  {language === "np" && selectedGalleryItem.title_np
+                    ? selectedGalleryItem.title_np
                     : selectedGalleryItem.title_en}
                 </h3>
                 {selectedGalleryItem.description_en && (
                   <p className="text-white/70 mt-2">
-                    {language === "np" && selectedGalleryItem.description_np 
-                      ? selectedGalleryItem.description_np 
+                    {language === "np" && selectedGalleryItem.description_np
+                      ? selectedGalleryItem.description_np
                       : selectedGalleryItem.description_en}
                   </p>
                 )}
@@ -250,5 +274,5 @@ export default function GalleryPage() {
 
       <Footer />
     </div>
-  )
+  );
 }
