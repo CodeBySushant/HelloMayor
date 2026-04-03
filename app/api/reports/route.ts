@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       ORDER BY published_at DESC
     `
     
-    const reports = await sql(query)
+    const reports = await sql.query(query)
     
     return NextResponse.json({ success: true, data: reports })
   } catch (error) {

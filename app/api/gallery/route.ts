@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     
     query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`
     
-    const items = await sql(query)
+    const items = await sql.query(query)
     
     return NextResponse.json({ success: true, data: items })
   } catch (error) {
