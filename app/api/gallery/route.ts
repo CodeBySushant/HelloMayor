@@ -1,65 +1,55 @@
-import { neon } from "@neondatabase/serverless"
-import { NextResponse } from "next/server"
+import { neon } from "@neondatabase/serverless";
+import { NextResponse } from "next/server";
 
-const sql = neon(process.env.DATABASE_URL!)
+const sql = neon(process.env.DATABASE_URL!);
 
-export async function GET(request: Request) {
+// ✅ GET
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url)
-    const category = searchParams.get("category")
-    
-    let query = `
-      SELECT id, title_en, title_np, description_en, description_np, 
-             media_type, media_url, thumbnail_url, category, event_date, 
-             is_featured, sort_order, created_at
-      FROM gallery_items
-    `
-    
-    if (category && category !== "all") {
-      query += ` WHERE category = '${category}'`
-    }
-    
-    query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`
-    
-    const items = await sql.query(query)
-    
-    return NextResponse.json({ success: true, data: items })
+    const items = await sql`
+      SELECT * FROM gallery
+      ORDER BY is_featured DESC, sort_order ASC, created_at DESC
+    `;
+
+    return NextResponse.json({ success: true, data: items });
   } catch (error) {
-    console.error("Gallery fetch error:", error)
+    console.error("Gallery fetch error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch gallery items" },
       { status: 500 }
-    )
+    );
   }
 }
 
+// ✅ POST
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { 
-      title_en, title_np, description_en, description_np, 
-      media_type, media_url, thumbnail_url, category, event_date, is_featured 
-    } = body
+    const body = await request.json();
+
+    const {
+      title,        
+      image_url,    
+      is_featured,
+      sort_order
+    } = body;
 
     const result = await sql`
-      INSERT INTO gallery_items (
-        title_en, title_np, description_en, description_np, 
-        media_type, media_url, thumbnail_url, category, event_date, is_featured
-      )
+      INSERT INTO gallery (title, image_url, is_featured, sort_order)
       VALUES (
-        ${title_en}, ${title_np || null}, ${description_en || null}, ${description_np || null},
-        ${media_type || 'image'}, ${media_url}, ${thumbnail_url || media_url}, 
-        ${category || 'general'}, ${event_date || null}, ${is_featured || false}
+        ${title},
+        ${image_url},
+        ${is_featured || false},
+        ${sort_order || 0}
       )
       RETURNING *
-    `
+    `;
 
-    return NextResponse.json({ success: true, data: result[0] })
+    return NextResponse.json({ success: true, data: result[0] });
   } catch (error) {
-    console.error("Gallery create error:", error)
+    console.error("Gallery create error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create gallery item" },
       { status: 500 }
-    )
+    );
   }
 }
