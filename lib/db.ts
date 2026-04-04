@@ -1,7 +1,11 @@
-"use server"
+import { neon } from "@neondatabase/serverless";
 
-import { neon } from "@neondatabase/serverless"
+let sql: ReturnType<typeof neon> | null = null;
 
-const sql = neon(process.env.DATABASE_URL!)
+if (process.env.DATABASE_URL) {
+  sql = neon(process.env.DATABASE_URL);
+} else {
+  sql = null;
+}
 
-export { sql }
+export { sql };
