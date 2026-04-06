@@ -1,11 +1,12 @@
-import { neon } from "@neondatabase/serverless";
+import mysql from "mysql2/promise";
 
-let sql: ReturnType<typeof neon> | null = null;
+const db = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "hellomayor",
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
-if (process.env.DATABASE_URL) {
-  sql = neon(process.env.DATABASE_URL);
-} else {
-  sql = null;
-}
-
-export { sql };
+export { db };
