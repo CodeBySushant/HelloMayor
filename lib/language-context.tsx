@@ -90,8 +90,8 @@ export const translations: Translations = {
 
   // Footer
   footerText: {
-    en: "Ward Office, Municipality, Nepal",
-    ne: "वडा कार्यालय, नगरपालिका, नेपाल",
+    en: "Tilathi Koiladi Rural Municipality Office, Tilathi, Saptari",
+    ne: "तिलाठी कोइलाडी गाउँपालिकाको कार्यालय, तिलाठी, सप्तरी",
   },
   allRightsReserved: {
     en: "All Rights Reserved",
