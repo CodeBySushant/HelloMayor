@@ -31,7 +31,6 @@ const categories = [
 
 export function GallerySection() {
   const { t, language } = useLanguage()
-  const isNepali = (language as string) === "np"
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeCategory, setActiveCategory] = useState("all")
@@ -56,7 +55,7 @@ export function GallerySection() {
           <div>
             <h2 className="text-3xl font-bold text-gradient-nepal">{t("mediaGallery")}</h2>
             <p className="text-muted-foreground mt-1">
-              {!isNepali ? "Photos and videos from our activities" : "हाम्रा गतिविधिहरूबाट फोटो र भिडियो"}
+              {language === "en" ? "Photos and videos from our activities" : "हाम्रा गतिविधिहरूबाट फोटो र भिडियो"}
             </p>
           </div>
           <Link href="/gallery">
@@ -84,7 +83,7 @@ export function GallerySection() {
                   : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
-              {isNepali ? cat.labelNp : cat.labelEn}
+              {language === "np" ? cat.labelNp : cat.labelEn}
             </button>
           ))}
         </motion.div>
@@ -142,7 +141,7 @@ export function GallerySection() {
                 {/* Featured Badge */}
                 {item.is_featured && (
                   <span className="absolute top-2 right-2 px-2 py-1 bg-[#DC143C] text-white text-xs rounded-full">
-                    {!isNepali ? "Featured" : "विशेष"}
+                    {language === "en" ? "Featured" : "विशेष"}
                   </span>
                 )}
 
@@ -161,7 +160,7 @@ export function GallerySection() {
                 {/* Title */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform">
                   <p className="text-white font-medium text-sm">
-                    {isNepali && item.title_np ? item.title_np : item.title_en}
+                    {language === "np" && item.title_np ? item.title_np : item.title_en}
                   </p>
                 </div>
               </motion.div>
@@ -194,7 +193,7 @@ export function GallerySection() {
               </div>
               <div className="text-center">
                 <h3 className="text-white text-xl font-semibold">
-                  {isNepali && selectedItem.title_np ? selectedItem.title_np : selectedItem.title_en}
+                  {language === "np" && selectedItem.title_np ? selectedItem.title_np : selectedItem.title_en}
                 </h3>
                 {selectedItem.description_en && (
                   <p className="text-white/60 mt-2">
