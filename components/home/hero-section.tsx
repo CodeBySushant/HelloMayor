@@ -105,7 +105,7 @@ export function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-16">
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
             <Link href="/complaints">
               <Button className="rounded-full px-8 h-14 text-base bg-gradient-to-r from-[#DC143C] to-[#003893] hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:scale-105">
                 <MessageSquareWarning className="mr-2 h-5 w-5" />

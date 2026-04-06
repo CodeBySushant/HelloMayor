@@ -1,16 +1,23 @@
-import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
-
-const sql = neon(process.env.DATABASE_URL!);
+import { sql } from "../../../lib/db";
 
 // ✅ GET
 export async function GET(request: Request) {
+  if (!sql)
+    return NextResponse.json(
+      { success: false, error: "Database not configured" },
+      { status: 500 }
+    );
+
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
 
     let query = `
-      SELECT * FROM gallery
+      SELECT id, title_en, title_np, description_en, description_np, 
+             media_type, media_url, thumbnail_url, category, event_date, 
+             is_featured, sort_order, created_at
+      FROM gallery_items
     `;
 
     if (category && category !== "all") {
@@ -19,7 +26,7 @@ export async function GET(request: Request) {
 
     query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`;
 
-    const items = await sql.query(query);
+    const items = await sql(query);
 
     return NextResponse.json({ success: true, data: items });
   } catch (error) {
@@ -33,6 +40,12 @@ export async function GET(request: Request) {
 
 // ✅ POST
 export async function POST(request: Request) {
+  if (!sql)
+    return NextResponse.json(
+      { success: false, error: "Database not configured" },
+      { status: 500 }
+    );
+
   try {
     const body = await request.json();
 
@@ -45,24 +58,20 @@ export async function POST(request: Request) {
       media_url,
       thumbnail_url,
       category,
+      event_date,
       is_featured,
     } = body;
 
     const result = await sql`
-      INSERT INTO gallery (
+      INSERT INTO gallery_items (
         title_en, title_np, description_en, description_np,
-        media_type, media_url, thumbnail_url, category, is_featured
+        media_type, media_url, thumbnail_url, 
+        category, event_date, is_featured
       )
       VALUES (
-        ${title_en},
-        ${title_np || null},
-        ${description_en || null},
-        ${description_np || null},
-        ${media_type || 'image'},
-        ${media_url},
-        ${thumbnail_url || media_url},
-        ${category || 'general'},
-        ${is_featured || false}
+        ${title_en}, ${title_np || null}, ${description_en || null}, ${description_np || null},
+        ${media_type || "image"}, ${media_url}, ${thumbnail_url || media_url}, 
+        ${category || "general"}, ${event_date || null}, ${is_featured || false}
       )
       RETURNING *
     `;

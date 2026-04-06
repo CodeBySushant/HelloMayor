@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useLanguage } from "@/lib/language-context"
-import { Phone, Mail, MapPin, Facebook, Twitter, Youtube } from "lucide-react"
+import Link from "next/link";
+import { useLanguage } from "@/lib/language-context";
+import { Phone, Mail, MapPin, Facebook, Twitter, Youtube } from "lucide-react";
 
 export function Footer() {
-  const { t } = useLanguage()
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-[#003893] text-white">
@@ -32,22 +32,34 @@ export function Footer() {
             <h3 className="font-semibold mb-4">{t("quickLinks")}</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/notices" className="text-sm text-white/70 hover:text-white transition-colors">
+                <Link
+                  href="/notices"
+                  className="text-sm text-white/70 hover:text-white transition-colors"
+                >
                   {t("notices")}
                 </Link>
               </li>
               <li>
-                <Link href="/complaints" className="text-sm text-white/70 hover:text-white transition-colors">
+                <Link
+                  href="/complaints"
+                  className="text-sm text-white/70 hover:text-white transition-colors"
+                >
                   {t("complaints")}
                 </Link>
               </li>
               <li>
-                <Link href="/development" className="text-sm text-white/70 hover:text-white transition-colors">
+                <Link
+                  href="/development"
+                  className="text-sm text-white/70 hover:text-white transition-colors"
+                >
                   {t("development")}
                 </Link>
               </li>
               <li>
-                <Link href="/reports" className="text-sm text-white/70 hover:text-white transition-colors">
+                <Link
+                  href="/reports"
+                  className="text-sm text-white/70 hover:text-white transition-colors"
+                >
                   {t("reports")}
                 </Link>
               </li>
@@ -60,11 +72,11 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <Phone className="h-4 w-4 text-[#DC143C]" />
-                +977-1-1234567
+                +977-9804715680
               </li>
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <Mail className="h-4 w-4 text-[#DC143C]" />
-                ward@municipality.gov.np
+                chairperson.tkgp@gmail.com
               </li>
               <li className="flex items-start gap-2 text-sm text-white/70">
                 <MapPin className="h-4 w-4 text-[#DC143C] mt-0.5" />
@@ -101,7 +113,8 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-white/60">
-            © {new Date().getFullYear()} Hello Mayor Portal. {t("allRightsReserved")}
+            © {new Date().getFullYear()} Hello Mayor Portal.{" "}
+            {t("allRightsReserved")}
           </p>
           <div className="flex items-center gap-1 text-sm text-white/60">
             <span>Powered by</span>
@@ -110,5 +123,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
