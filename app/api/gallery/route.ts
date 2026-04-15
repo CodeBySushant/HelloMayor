@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../lib/db";
+import { requireAdmin } from "@/lib/auth";
 
-// ✅ GET
-export async function GET(request: Request) {
+
+// =======================
+// GET (PUBLIC)
+// =======================
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -16,7 +20,7 @@ export async function GET(request: Request) {
     const params: any[] = [];
 
     if (category && category !== "all") {
-      query += ` WHERE category = ?`;  // use $1 if PostgreSQL
+      query += ` WHERE category = ?`;
       params.push(category);
     }
 
@@ -25,8 +29,10 @@ export async function GET(request: Request) {
     const [items]: any = await db.query(query, params);
 
     return NextResponse.json({ success: true, data: items });
+
   } catch (error) {
     console.error("Gallery fetch error:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to fetch gallery items" },
       { status: 500 }
@@ -34,8 +40,15 @@ export async function GET(request: Request) {
   }
 }
 
-// ✅ POST
-export async function POST(request: Request) {
+
+// =======================
+// POST (PROTECTED - CLEAN)
+// =======================
+export async function POST(request: NextRequest) {
+  // 🔥 CLEAN AUTH
+  const authError = requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
 
@@ -52,12 +65,19 @@ export async function POST(request: Request) {
       is_featured,
     } = body;
 
+    if (!title_en || !media_url) {
+      return NextResponse.json(
+        { success: false, error: "Title and media URL are required" },
+        { status: 400 }
+      );
+    }
+
     const [result]: any = await db.query(
       `INSERT INTO gallery_items (
         title_en, title_np, description_en, description_np,
         media_type, media_url, thumbnail_url, 
         category, event_date, is_featured
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,  // use $1..$10 if PostgreSQL
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title_en,
         title_np ?? null,
@@ -72,9 +92,19 @@ export async function POST(request: Request) {
       ]
     );
 
-    return NextResponse.json({ success: true, data: result[0] });
+    const [newItem]: any = await db.query(
+      `SELECT * FROM gallery_items WHERE id = ?`,
+      [result.insertId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: newItem[0],
+    });
+
   } catch (error) {
     console.error("Gallery create error:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to create gallery item" },
       { status: 500 }

@@ -1,9 +1,37 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import bcrypt from "bcrypt";
 
 export async function POST(req: Request) {
-  const { username, password } = await req.json();
+  try {
+    const { username, password } = await req.json();
 
-  if (username === "admin" && password === "1234") {
+    // 🔍 Find user
+    const [users]: any = await db.query(
+      "SELECT * FROM admins WHERE username = ?",
+      [username]
+    );
+
+    if (users.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    const user = users[0];
+
+    // 🔐 Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return NextResponse.json(
+        { success: false, message: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    // 🍪 Set cookie
     const response = NextResponse.json({ success: true });
 
     response.cookies.set("admin-auth", "true", {
@@ -14,10 +42,13 @@ export async function POST(req: Request) {
     });
 
     return response;
-  }
 
-  return NextResponse.json(
-    { success: false },
-    { status: 401 }
-  );
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
+  }
 }

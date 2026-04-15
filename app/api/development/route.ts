@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../lib/db";
+import { requireAdmin } from "@/lib/auth";
 
+
+// =======================
+// GET (PUBLIC)
+// =======================
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,11 +19,13 @@ export async function GET(request: NextRequest) {
         `SELECT * FROM development_works WHERE status = ? ORDER BY created_at DESC`,
         [status]
       ) as any;
+
     } else if (category && category !== "all") {
       [works] = await db.query(
         `SELECT * FROM development_works WHERE category = ? ORDER BY created_at DESC`,
         [category]
       ) as any;
+
     } else {
       [works] = await db.query(
         `SELECT * FROM development_works ORDER BY created_at DESC`
@@ -26,8 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: works });
+
   } catch (error) {
     console.error("Error fetching development works:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to fetch development works" },
       { status: 500 }
@@ -35,13 +44,29 @@ export async function GET(request: NextRequest) {
   }
 }
 
+
+// =======================
+// POST (PROTECTED - CLEAN)
+// =======================
 export async function POST(request: NextRequest) {
+  const authError = requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
+
     const {
-      title_en, title_np, description_en, description_np,
-      category, budget, status, start_date,
-      expected_completion, contractor_name, location,
+      title_en,
+      title_np,
+      description_en,
+      description_np,
+      category,
+      budget,
+      status,
+      start_date,
+      expected_completion,
+      contractor_name,
+      location,
     } = body;
 
     if (!title_en) {
@@ -56,9 +81,17 @@ export async function POST(request: NextRequest) {
         (title_en, title_np, description_en, description_np, category, budget, status, start_date, expected_completion, contractor_name, location)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        title_en, title_np ?? null, description_en ?? null, description_np ?? null,
-        category ?? null, budget ?? 0, status ?? "planned", start_date ?? null,
-        expected_completion ?? null, contractor_name ?? null, location ?? null,
+        title_en,
+        title_np ?? null,
+        description_en ?? null,
+        description_np ?? null,
+        category ?? null,
+        budget ?? 0,
+        status ?? "planned",
+        start_date ?? null,
+        expected_completion ?? null,
+        contractor_name ?? null,
+        location ?? null,
       ]
     );
 
@@ -67,9 +100,14 @@ export async function POST(request: NextRequest) {
       [result.insertId]
     );
 
-    return NextResponse.json({ success: true, data: newWork[0] });
+    return NextResponse.json({
+      success: true,
+      data: newWork[0],
+    });
+
   } catch (error) {
     console.error("Error creating development work:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to create development work" },
       { status: 500 }
@@ -77,7 +115,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
+// =======================
+// PATCH (PROTECTED - CLEAN)
+// =======================
 export async function PATCH(request: NextRequest) {
+  const authError = requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { id, progress, spent, status } = body;
@@ -106,9 +151,14 @@ export async function PATCH(request: NextRequest) {
       [id]
     );
 
-    return NextResponse.json({ success: true, data: updated[0] });
+    return NextResponse.json({
+      success: true,
+      data: updated[0],
+    });
+
   } catch (error) {
     console.error("Error updating development work:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to update development work" },
       { status: 500 }

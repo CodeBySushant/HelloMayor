@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../lib/db";
+import { requireAdmin } from "@/lib/auth";
 
-export async function GET(request: Request) {
+
+// =======================
+// GET (PUBLIC)
+// =======================
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const reportType = searchParams.get("type");
@@ -32,18 +37,29 @@ export async function GET(request: Request) {
     const [reports]: any = await db.query(query, params);
 
     return NextResponse.json({ success: true, data: reports });
+
   } catch (error) {
     console.error("Reports fetch error:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to fetch reports" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+
+// =======================
+// POST (PROTECTED - CLEAN)
+// =======================
+export async function POST(request: NextRequest) {
+  // 🔥 CLEAN AUTH
+  const authError = requireAdmin();
+  if (authError) return authError;
+
   try {
     const body = await request.json();
+
     const {
       title_en,
       title_np,
@@ -54,6 +70,13 @@ export async function POST(request: Request) {
       file_url,
       file_size,
     } = body;
+
+    if (!title_en || !report_type || !fiscal_year || !file_url) {
+      return NextResponse.json(
+        { success: false, error: "Required fields missing" },
+        { status: 400 }
+      );
+    }
 
     const [result]: any = await db.query(
       `INSERT INTO reports (
@@ -77,12 +100,17 @@ export async function POST(request: Request) {
       [result.insertId]
     );
 
-    return NextResponse.json({ success: true, data: newReport[0] });
+    return NextResponse.json({
+      success: true,
+      data: newReport[0],
+    });
+
   } catch (error) {
     console.error("Report create error:", error);
+
     return NextResponse.json(
       { success: false, error: "Failed to create report" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
