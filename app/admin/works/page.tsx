@@ -76,15 +76,22 @@ export default function AdminWorksPage() {
   };
 
   const handleEdit = async (work: any) => {
-    const newTitle = prompt("Edit title", work.title_en);
-    if (!newTitle) return;
+    const title = prompt("Title", work.title_en);
+    const description = prompt("Description", work.description_en || "");
+    const category = prompt("Category", work.category || "");
+    const budget = prompt("Budget", work.budget.toString());
+    const status = prompt("Status (planned/ongoing/completed)", work.status);
 
     await fetch("/api/development", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: work.id,
-        title_en: newTitle,
+        title_en: title,
+        description_en: description,
+        category,
+        budget: Number(budget),
+        status,
       }),
     });
 
@@ -104,17 +111,30 @@ export default function AdminWorksPage() {
         </div>
         <Button
           className="bg-gradient-to-r from-[#DC143C] to-[#003893] text-white rounded-full"
-          onClick={() => {
-            const title = prompt("Enter project title");
+          onClick={async () => {
+            const title = prompt("Title");
+            const description = prompt("Description");
+            const category = prompt("Category");
+            const budget = prompt("Budget");
+            const status = prompt("Status (planned/ongoing/completed)");
+
             if (!title) return;
 
-            fetch("/api/development", {
+            await fetch("/api/development", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ title_en: title }),
-            }).then(() => mutate("/api/development"));
+              body: JSON.stringify({
+                title_en: title,
+                description_en: description,
+                category,
+                budget: Number(budget),
+                status,
+              }),
+            });
+
+            mutate("/api/development");
           }}
         >
           <Plus className="h-4 w-4 mr-2" />

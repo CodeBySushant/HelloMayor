@@ -44,9 +44,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
 // =======================
-// POST (PROTECTED - CLEAN)
+// POST (PROTECTED - FULL CREATE)
 // =======================
 export async function POST(request: NextRequest) {
   const authError = await requireAdmin();
@@ -62,11 +61,14 @@ export async function POST(request: NextRequest) {
       description_np,
       category,
       budget,
+      spent,
+      progress,
       status,
       start_date,
       expected_completion,
       contractor_name,
       location,
+      image_urls,
     } = body;
 
     if (!title_en) {
@@ -78,8 +80,8 @@ export async function POST(request: NextRequest) {
 
     const [result]: any = await db.query(
       `INSERT INTO development_works 
-        (title_en, title_np, description_en, description_np, category, budget, status, start_date, expected_completion, contractor_name, location)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (title_en, title_np, description_en, description_np, category, budget, spent, progress, status, start_date, expected_completion, contractor_name, location, image_urls)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title_en,
         title_np ?? null,
@@ -87,11 +89,14 @@ export async function POST(request: NextRequest) {
         description_np ?? null,
         category ?? null,
         budget ?? 0,
+        spent ?? 0,
+        progress ?? 0,
         status ?? "planned",
         start_date ?? null,
         expected_completion ?? null,
         contractor_name ?? null,
         location ?? null,
+        image_urls ?? null,
       ]
     );
 
@@ -106,18 +111,17 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error creating development work:", error);
+    console.error("Create error:", error);
 
     return NextResponse.json(
-      { success: false, error: "Failed to create development work" },
+      { success: false, error: "Failed to create" },
       { status: 500 }
     );
   }
 }
 
-
 // =======================
-// PATCH (PROTECTED - CLEAN)
+// PATCH (PROTECTED - FULL UPDATE)
 // =======================
 export async function PATCH(request: NextRequest) {
   const authError = await requireAdmin();
@@ -125,29 +129,71 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, progress, spent, status } = body;
+
+    const {
+      id,
+      title_en,
+      title_np,
+      description_en,
+      description_np,
+      category,
+      budget,
+      spent,
+      progress,
+      status,
+      start_date,
+      expected_completion,
+      contractor_name,
+      location,
+      image_urls,
+    } = body;
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: "Development work ID is required" },
+        { success: false, error: "ID is required" },
         { status: 400 }
       );
     }
 
     await db.query(
-      `UPDATE development_works 
-       SET 
-         progress = COALESCE(?, progress),
-         spent = COALESCE(?, spent),
-         status = COALESCE(?, status),
-         actual_completion = CASE WHEN ? = 'completed' THEN CURDATE() ELSE actual_completion END,
-         updated_at = NOW()
-       WHERE id = ?`,
-      [progress ?? null, spent ?? null, status ?? null, status ?? null, id]
+      `UPDATE development_works SET
+        title_en = COALESCE(?, title_en),
+        title_np = COALESCE(?, title_np),
+        description_en = COALESCE(?, description_en),
+        description_np = COALESCE(?, description_np),
+        category = COALESCE(?, category),
+        budget = COALESCE(?, budget),
+        spent = COALESCE(?, spent),
+        progress = COALESCE(?, progress),
+        status = COALESCE(?, status),
+        start_date = COALESCE(?, start_date),
+        expected_completion = COALESCE(?, expected_completion),
+        contractor_name = COALESCE(?, contractor_name),
+        location = COALESCE(?, location),
+        image_urls = COALESCE(?, image_urls),
+        updated_at = NOW()
+      WHERE id = ?`,
+      [
+        title_en ?? null,
+        title_np ?? null,
+        description_en ?? null,
+        description_np ?? null,
+        category ?? null,
+        budget ?? null,
+        spent ?? null,
+        progress ?? null,
+        status ?? null,
+        start_date ?? null,
+        expected_completion ?? null,
+        contractor_name ?? null,
+        location ?? null,
+        image_urls ?? null,
+        id,
+      ]
     );
 
     const [updated]: any = await db.query(
-      `SELECT * FROM development_works WHERE id = ?`,
+      "SELECT * FROM development_works WHERE id = ?",
       [id]
     );
 
@@ -157,10 +203,10 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error updating development work:", error);
+    console.error("Update error:", error);
 
     return NextResponse.json(
-      { success: false, error: "Failed to update development work" },
+      { success: false, error: "Failed to update" },
       { status: 500 }
     );
   }
