@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 // =======================
 export async function POST(request: NextRequest) {
   // 🔥 CLEAN AUTH (no repetition)
-  const authError = requireAdmin();
+  const authError = await requireAdmin();
   if (authError) return authError;
 
   try {

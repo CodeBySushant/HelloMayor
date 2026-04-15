@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 // POST (PROTECTED - CLEAN)
 // =======================
 export async function POST(request: NextRequest) {
-  const authError = requireAdmin();
+  const authError = await requireAdmin();
   if (authError) return authError;
 
   try {
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 // PATCH (PROTECTED - CLEAN)
 // =======================
 export async function PATCH(request: NextRequest) {
-  const authError = requireAdmin();
+  const authError = await requireAdmin();
   if (authError) return authError;
 
   try {
@@ -170,7 +170,7 @@ export async function PATCH(request: NextRequest) {
 // DELETE (PROTECTED - FIXED)
 // =======================
 export async function DELETE(request: NextRequest) {
-  const authError = requireAdmin();
+  const authError = await requireAdmin();
   if (authError) return authError;
 
   try {
