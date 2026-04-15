@@ -165,3 +165,42 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+// =======================
+// DELETE (PROTECTED - FIXED)
+// =======================
+export async function DELETE(request: NextRequest) {
+  const authError = requireAdmin();
+  if (authError) return authError;
+
+  try {
+    // ✅ GET ID FROM QUERY PARAM (FIX)
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID is required" },
+        { status: 400 }
+      );
+    }
+
+    await db.query(
+      "DELETE FROM development_works WHERE id = ?",
+      [id]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("Delete error:", error);
+
+    return NextResponse.json(
+      { success: false, error: "Failed to delete" },
+      { status: 500 }
+    );
+  }
+}

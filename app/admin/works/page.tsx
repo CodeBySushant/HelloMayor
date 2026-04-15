@@ -1,67 +1,122 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Hammer, Plus, Edit2, Trash2, Loader2, Search, MapPin, Calendar, IndianRupee } from "lucide-react"
-import useSWR from "swr"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import useSWR, { mutate } from "swr";
+import {
+  Hammer,
+  Plus,
+  Edit2,
+  Trash2,
+  Loader2,
+  Search,
+  MapPin,
+  Calendar,
+  IndianRupee,
+} from "lucide-react";
 
 interface DevelopmentWork {
-  id: number
-  title_en: string
-  title_np: string | null
-  description_en: string | null
-  category: string | null
-  budget: number
-  spent: number
-  progress: number
-  status: string
-  start_date: string | null
-  expected_completion: string | null
-  location: string | null
+  id: number;
+  title_en: string;
+  title_np: string | null;
+  description_en: string | null;
+  category: string | null;
+  budget: number;
+  spent: number;
+  progress: number;
+  status: string;
+  start_date: string | null;
+  expected_completion: string | null;
+  location: string | null;
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const statusColors: Record<string, string> = {
   planned: "bg-gray-500",
   ongoing: "bg-amber-500",
   completed: "bg-green-500",
   delayed: "bg-red-500",
-}
+};
 
 export default function AdminWorksPage() {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading } = useSWR<{ success: boolean; data: DevelopmentWork[] }>(
-    "/api/development",
-    fetcher
-  )
+  const { data, isLoading } = useSWR<{
+    success: boolean;
+    data: DevelopmentWork[];
+  }>("/api/development", fetcher);
 
-  const works = data?.data || []
+  const works = data?.data || [];
 
-  const filteredWorks = works.filter(work =>
-    work.title_en.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredWorks = works.filter((work) =>
+    work.title_en.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const formatBudget = (amount: number) => {
-    if (amount >= 10000000) return `${(amount / 10000000).toFixed(1)} Cr`
-    if (amount >= 100000) return `${(amount / 100000).toFixed(1)} L`
-    return amount.toLocaleString()
-  }
+    if (amount >= 10000000) return `${(amount / 10000000).toFixed(1)} Cr`;
+    if (amount >= 100000) return `${(amount / 100000).toFixed(1)} L`;
+    return amount.toLocaleString();
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this project?")) return;
+
+    await fetch(`/api/development?id=${id}`, {
+      method: "DELETE",
+    });
+
+    // refresh data
+    mutate("/api/development");
+  };
+
+  const handleEdit = async (work: any) => {
+    const newTitle = prompt("Edit title", work.title_en);
+    if (!newTitle) return;
+
+    await fetch("/api/development", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: work.id,
+        title_en: newTitle,
+      }),
+    });
+
+    mutate("/api/development");
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#003893]">Development Works</h1>
-          <p className="text-muted-foreground">Track and manage ward development projects</p>
+          <h1 className="text-2xl font-bold text-[#003893]">
+            Development Works
+          </h1>
+          <p className="text-muted-foreground">
+            Track and manage ward development projects
+          </p>
         </div>
-        <Button className="bg-gradient-to-r from-[#DC143C] to-[#003893] text-white rounded-full">
+        <Button
+          className="bg-gradient-to-r from-[#DC143C] to-[#003893] text-white rounded-full"
+          onClick={() => {
+            const title = prompt("Enter project title");
+            if (!title) return;
+
+            fetch("/api/development", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ title_en: title }),
+            }).then(() => mutate("/api/development"));
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Project
         </Button>
@@ -102,16 +157,24 @@ export default function AdminWorksPage() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className={`${statusColors[work.status] || "bg-gray-500"} text-white capitalize`}>
+                        <Badge
+                          className={`${statusColors[work.status] || "bg-gray-500"} text-white capitalize`}
+                        >
                           {work.status}
                         </Badge>
                         {work.category && (
-                          <Badge variant="outline" className="capitalize">{work.category}</Badge>
+                          <Badge variant="outline" className="capitalize">
+                            {work.category}
+                          </Badge>
                         )}
                       </div>
-                      <h3 className="font-semibold text-[#003893] mb-1">{work.title_en}</h3>
+                      <h3 className="font-semibold text-[#003893] mb-1">
+                        {work.title_en}
+                      </h3>
                       {work.description_en && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{work.description_en}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {work.description_en}
+                        </p>
                       )}
                       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                         {work.location && (
@@ -132,20 +195,34 @@ export default function AdminWorksPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="w-32">
                         <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-medium text-[#003893]">{work.progress}%</span>
+                          <span className="text-muted-foreground">
+                            Progress
+                          </span>
+                          <span className="font-medium text-[#003893]">
+                            {work.progress}%
+                          </span>
                         </div>
                         <Progress value={work.progress} className="h-2" />
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(work)}
+                        >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-600">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600"
+                          onClick={() => handleDelete(work.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -158,5 +235,5 @@ export default function AdminWorksPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
