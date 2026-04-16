@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       attachment_url,
     } = body;
 
-    if (!title_en || !content_en) {
+    if (!title_en.trim() || !content_en.trim()) {
       return NextResponse.json(
         { success: false, error: "Title and content are required" },
         { status: 400 }
@@ -87,6 +87,109 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: false, error: "Failed to create notice" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+
+    const {
+      id,
+      title_en,
+      title_np,
+      content_en,
+      content_np,
+      category,
+      is_important,
+      expiry_date,
+      attachment_url,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID required" },
+        { status: 400 }
+      );
+    }
+
+    await db.query(
+      `UPDATE notices SET
+        title_en = COALESCE(?, title_en),
+        title_np = COALESCE(?, title_np),
+        content_en = COALESCE(?, content_en),
+        content_np = COALESCE(?, content_np),
+        category = COALESCE(?, category),
+        is_important = COALESCE(?, is_important),
+        expiry_date = COALESCE(?, expiry_date),
+        attachment_url = COALESCE(?, attachment_url),
+        updated_at = NOW()
+      WHERE id = ?`,
+      [
+        title_en ?? null,
+        title_np ?? null,
+        content_en ?? null,
+        content_np ?? null,
+        category ?? null,
+        is_important !== undefined ? is_important : null,
+        expiry_date ?? null,
+        attachment_url ?? null,
+        id,
+      ]
+    );
+
+    const [updated]: any = await db.query(
+      "SELECT * FROM notices WHERE id = ?",
+      [id]
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: updated[0],
+    });
+
+  } catch (error) {
+    console.error("Notice update error:", error);
+
+    return NextResponse.json(
+      { success: false, error: "Failed to update" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = Number(searchParams.get("id"));
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "ID required" },
+        { status: 400 }
+      );
+    }
+
+    await db.query("DELETE FROM notices WHERE id = ?", [id]);
+
+    return NextResponse.json({
+      success: true,
+      message: "Deleted successfully",
+    });
+
+  } catch (error) {
+    console.error("Notice delete error:", error);
+
+    return NextResponse.json(
+      { success: false, error: "Failed to delete" },
       { status: 500 }
     );
   }
