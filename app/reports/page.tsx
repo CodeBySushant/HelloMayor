@@ -1,11 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { useLanguage } from "@/lib/language-context"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   BarChart3,
   Download,
@@ -16,6 +24,7 @@ import {
   IndianRupee,
   Building,
   Loader2,
+  Filter,
 } from "lucide-react"
 import {
   BarChart,
@@ -48,7 +57,7 @@ interface Report {
   published_at: string
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 const yearlyBudgetData = [
   { year: "2077-78", budget: 80000000, expenditure: 72000000 },
@@ -75,7 +84,23 @@ const populationTrendData = [
   { year: "2081", population: 45672 },
 ]
 
+const REPORT_TYPES = [
+  { value: "all", labelEn: "All Types", labelNp: "सबै प्रकार" },
+  { value: "budget", labelEn: "Budget", labelNp: "बजेट" },
+  { value: "development", labelEn: "Development", labelNp: "विकास" },
+  { value: "census", labelEn: "Census", labelNp: "जनगणना" },
+  { value: "audit", labelEn: "Audit", labelNp: "लेखापरीक्षण" },
+  { value: "annual", labelEn: "Annual", labelNp: "वार्षिक" },
+  { value: "quarterly", labelEn: "Quarterly", labelNp: "त्रैमासिक" },
+]
+
+const FISCAL_YEARS = [
+  { value: "all", labelEn: "All Years", labelNp: "सबै वर्ष" },
+  "2081-82", "2080-81", "2079-80", "2078-79", "2077-78",
+]
+
 const formatFileSize = (bytes: number) => {
+  if (!bytes) return ""
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -83,13 +108,33 @@ const formatFileSize = (bytes: number) => {
 
 export default function ReportsPage() {
   const { language } = useLanguage()
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [yearFilter, setYearFilter] = useState("all")
+
+  const params = new URLSearchParams()
+  if (typeFilter !== "all") params.set("type", typeFilter)
+  if (yearFilter !== "all") params.set("year", yearFilter)
+  const queryString = params.toString()
 
   const { data, isLoading } = useSWR<{ success: boolean; data: Report[] }>(
-    "/api/reports",
+    `/api/reports${queryString ? `?${queryString}` : ""}`,
     fetcher
   )
 
   const reports = data?.data || []
+
+  const handleDownload = async (report: Report) => {
+    // Increment download count in background (best-effort)
+    fetch(`/api/reports/download?id=${report.id}`, { method: "POST" }).catch(() => {})
+    // Trigger file download
+    const link = document.createElement("a")
+    link.href = report.file_url
+    link.download = report.title_en
+    link.target = "_blank"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#003893]/[0.02]">
@@ -180,11 +225,7 @@ export default function ReportsPage() {
           {/* Charts Section */}
           <div className="grid lg:grid-cols-2 gap-6 mb-12">
             {/* Budget Trend */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
               <Card className="border-[#003893]/10">
                 <CardHeader>
                   <CardTitle className="text-[#003893]">
@@ -197,16 +238,10 @@ export default function ReportsPage() {
                       <BarChart data={yearlyBudgetData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                         <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#003893" }} />
-                        <YAxis 
-                          tick={{ fontSize: 12, fill: "#003893" }} 
-                          tickFormatter={(v) => `${(v/10000000).toFixed(0)}Cr`}
-                        />
-                        <Tooltip 
-                          formatter={(v: number) => `NPR ${(v/10000000).toFixed(2)} Cr`}
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid #E5E7EB",
-                          }}
+                        <YAxis tick={{ fontSize: 12, fill: "#003893" }} tickFormatter={(v) => `${(v / 10000000).toFixed(0)}Cr`} />
+                        <Tooltip
+                          formatter={(v: number) => `NPR ${(v / 10000000).toFixed(2)} Cr`}
+                          contentStyle={{ borderRadius: "12px", border: "1px solid #E5E7EB" }}
                         />
                         <Legend />
                         <Bar dataKey="budget" name={language === "np" ? "बजेट" : "Budget"} fill="#003893" radius={[4, 4, 0, 0]} />
@@ -219,11 +254,7 @@ export default function ReportsPage() {
             </motion.div>
 
             {/* Sector Distribution */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
               <Card className="border-[#003893]/10">
                 <CardHeader>
                   <CardTitle className="text-[#003893]">
@@ -248,20 +279,20 @@ export default function ReportsPage() {
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(v) => `${v}%`}
                           labelFormatter={(_, payload) => {
                             if (payload && payload[0]) {
-                              const data = payload[0].payload
-                              return language === "np" ? data.nameNp : data.name
+                              const d = payload[0].payload
+                              return language === "np" ? d.nameNp : d.name
                             }
                             return ""
                           }}
                         />
-                        <Legend 
-                          formatter={(value, entry) => {
-                            const data = entry.payload as typeof sectorWiseData[0]
-                            return language === "np" ? data.nameNp : data.name
+                        <Legend
+                          formatter={(_, entry) => {
+                            const d = entry.payload as (typeof sectorWiseData)[0]
+                            return language === "np" ? d.nameNp : d.name
                           }}
                         />
                       </PieChart>
@@ -273,12 +304,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Population Trend */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-12"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-12">
             <Card className="border-[#003893]/10">
               <CardHeader>
                 <CardTitle className="text-[#003893]">
@@ -291,23 +317,20 @@ export default function ReportsPage() {
                     <LineChart data={populationTrendData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                       <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#003893" }} />
-                      <YAxis 
+                      <YAxis
                         tick={{ fontSize: 12, fill: "#003893" }}
-                        domain={['dataMin - 1000', 'dataMax + 1000']}
-                        tickFormatter={(v) => `${(v/1000).toFixed(0)}K`}
+                        domain={["dataMin - 1000", "dataMax + 1000"]}
+                        tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
                       />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(v: number) => v.toLocaleString()}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "1px solid #E5E7EB",
-                        }}
+                        contentStyle={{ borderRadius: "12px", border: "1px solid #E5E7EB" }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="population" 
+                      <Line
+                        type="monotone"
+                        dataKey="population"
                         name={language === "np" ? "जनसंख्या" : "Population"}
-                        stroke="#003893" 
+                        stroke="#003893"
                         strokeWidth={3}
                         dot={{ fill: "#DC143C", strokeWidth: 2, r: 5 }}
                         activeDot={{ r: 8, fill: "#DC143C" }}
@@ -320,14 +343,46 @@ export default function ReportsPage() {
           </motion.div>
 
           {/* Downloadable Reports */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <h2 className="text-2xl font-bold text-[#003893] mb-6">
-              {language === "en" ? "Downloadable Reports" : "डाउनलोड गर्न सकिने प्रतिवेदनहरू"}
-            </h2>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-[#003893]">
+                {language === "en" ? "Downloadable Reports" : "डाउनलोड गर्न सकिने प्रतिवेदनहरू"}
+              </h2>
+
+              {/* Filters */}
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-36 h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REPORT_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {language === "np" ? t.labelNp : t.labelEn}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-32 h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FISCAL_YEARS.map((y) =>
+                      typeof y === "string" ? (
+                        <SelectItem key={y} value={y}>{y}</SelectItem>
+                      ) : (
+                        <SelectItem key={y.value} value={y.value}>
+                          {language === "np" ? y.labelNp : y.labelEn}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {isLoading ? (
               <div className="flex justify-center py-12">
@@ -344,7 +399,7 @@ export default function ReportsPage() {
                     key={report.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
+                    transition={{ delay: 0.5 + index * 0.07 }}
                     whileHover={{ y: -4 }}
                     className="bg-white rounded-2xl p-5 shadow-sm border border-[#003893]/10 hover:shadow-md transition-all"
                   >
@@ -356,15 +411,23 @@ export default function ReportsPage() {
                         <h3 className="font-semibold text-[#003893] text-sm mb-1 line-clamp-2">
                           {language === "np" && report.title_np ? report.title_np : report.title_en}
                         </h3>
+                        {(language === "np" ? report.description_np : report.description_en) && (
+                          <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+                            {language === "np" ? report.description_np : report.description_en}
+                          </p>
+                        )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                           <Calendar className="h-3 w-3" />
                           <span>{report.fiscal_year}</span>
-                          <span className="text-[#003893]">{formatFileSize(report.file_size)}</span>
+                          {report.file_size > 0 && (
+                            <span className="text-[#003893]">{formatFileSize(report.file_size)}</span>
+                          )}
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="w-full rounded-full border-[#003893]/20 text-[#003893] hover:bg-[#003893]/5"
+                          onClick={() => handleDownload(report)}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           {language === "en" ? "Download PDF" : "PDF डाउनलोड"}
