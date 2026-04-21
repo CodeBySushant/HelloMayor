@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../lib/db";
 import { requireAdmin } from "@/lib/auth";
 
-
 // =======================
 // GET (PUBLIC)
 // =======================
@@ -10,60 +9,54 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const limit = parseInt(searchParams.get("limit") || "12");
 
-    let query = `
-      SELECT id, title_en, title_np, description_en, description_np, 
-             media_type, media_url, thumbnail_url, category, event_date, 
-             is_featured, sort_order, created_at
-      FROM gallery_items
-    `;
+    const conditions: string[] = [];
     const params: any[] = [];
 
     if (category && category !== "all") {
-      query += ` WHERE category = ?`; // use $1 if PostgreSQL
+      conditions.push(`category = ?`);
       params.push(category);
     }
 
-    query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC
-LIMIT 12`;
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const query = `
+      SELECT id, title_en, title_np, description_en, description_np,
+             media_type, media_url, thumbnail_url, category, event_date,
+             is_featured, sort_order, created_at
+      FROM gallery_items
+      ${where}
+      ORDER BY is_featured DESC, sort_order ASC, created_at DESC
+      LIMIT ?
+    `;
+    params.push(limit);
 
     const [items]: any = await db.query(query, params);
 
     return NextResponse.json({ success: true, data: items });
-
   } catch (error) {
     console.error("Gallery fetch error:", error);
-
     return NextResponse.json(
       { success: false, error: "Failed to fetch gallery items" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-
 // =======================
-// POST (PROTECTED - CLEAN)
+// POST (PROTECTED)
 // =======================
 export async function POST(request: NextRequest) {
-  // 🔥 CLEAN AUTH
   const authError = await requireAdmin();
   if (authError) return authError;
 
   try {
     const body = await request.json();
-
     const {
-      title_en,
-      title_np,
-      description_en,
-      description_np,
-      media_type,
-      media_url,
-      thumbnail_url,
-      category,
-      event_date,
-      is_featured,
+      title_en, title_np, description_en, description_np,
+      media_type, media_url, thumbnail_url,
+      category, event_date, is_featured,
     } = body;
 
     if (!title_en || !media_url) {
@@ -76,9 +69,9 @@ export async function POST(request: NextRequest) {
     const [result]: any = await db.query(
       `INSERT INTO gallery_items (
         title_en, title_np, description_en, description_np,
-        media_type, media_url, thumbnail_url, 
+        media_type, media_url, thumbnail_url,
         category, event_date, is_featured
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // use $1..$10 if PostgreSQL
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title_en,
         title_np ?? null,
@@ -90,7 +83,7 @@ export async function POST(request: NextRequest) {
         category ?? "general",
         event_date ?? null,
         is_featured ?? false,
-      ],
+      ]
     );
 
     const [newItem]: any = await db.query(
@@ -98,17 +91,12 @@ export async function POST(request: NextRequest) {
       [result.insertId]
     );
 
-    return NextResponse.json({
-      success: true,
-      data: newItem[0],
-    });
-
+    return NextResponse.json({ success: true, data: newItem[0] });
   } catch (error) {
     console.error("Gallery create error:", error);
-
     return NextResponse.json(
       { success: false, error: "Failed to create gallery item" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
