@@ -7,30 +7,12 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  BarChart3,
-  Download,
-  FileText,
-  Calendar,
-  TrendingUp,
-  Users,
-  IndianRupee,
-  Building,
-  Loader2,
+  BarChart3, Download, FileText, Calendar,
+  TrendingUp, Users, IndianRupee, Building, Loader2,
 } from "lucide-react"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend,
 } from "recharts"
 import useSWR from "swr"
 
@@ -60,10 +42,10 @@ const yearlyBudgetData = [
 
 const sectorWiseData = [
   { name: "Infrastructure", nameNp: "पूर्वाधार", value: 35, fill: "#003893" },
-  { name: "Education", nameNp: "शिक्षा", value: 25, fill: "#DC143C" },
-  { name: "Health", nameNp: "स्वास्थ्य", value: 20, fill: "#10B981" },
+  { name: "Education",      nameNp: "शिक्षा",    value: 25, fill: "#DC143C" },
+  { name: "Health",         nameNp: "स्वास्थ्य", value: 20, fill: "#10B981" },
   { name: "Social Welfare", nameNp: "समाज कल्याण", value: 12, fill: "#F59E0B" },
-  { name: "Administration", nameNp: "प्रशासन", value: 8, fill: "#6B7280" },
+  { name: "Administration", nameNp: "प्रशासन",   value: 8,  fill: "#6B7280" },
 ]
 
 const populationTrendData = [
@@ -76,6 +58,7 @@ const populationTrendData = [
 ]
 
 const formatFileSize = (bytes: number) => {
+  if (!bytes) return ""
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -83,25 +66,24 @@ const formatFileSize = (bytes: number) => {
 
 export default function ReportsPage() {
   const { language } = useLanguage()
-
-  const { data, isLoading } = useSWR<{ success: boolean; data: Report[] }>(
-    "/api/reports",
-    fetcher
-  )
-
+  const { data, isLoading } = useSWR<{ success: boolean; data: Report[] }>("/api/reports", fetcher)
   const reports = data?.data || []
+
+  const handleDownload = async (report: Report) => {
+    // Increment download counter in background
+    fetch(`/api/reports/${report.id}`, { method: "PATCH" }).catch(() => {})
+    // Open file
+    window.open(report.file_url, "_blank", "noopener,noreferrer")
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#003893]/[0.02]">
       <Header />
       <main className="pt-24 pb-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
           {/* Page Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#003893]/5 border border-[#003893]/10 mb-6">
               <BarChart3 className="h-4 w-4 text-[#DC143C]" />
               <span className="text-sm font-medium text-[#003893]">
@@ -122,69 +104,30 @@ export default function ReportsPage() {
 
           {/* Key Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
           >
-            <Card className="border-[#003893]/10">
-              <CardContent className="pt-6 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#003893]/10 text-[#003893] mb-3">
-                  <IndianRupee className="h-6 w-6" />
-                </div>
-                <div className="text-2xl font-bold text-[#003893]">
-                  {language === "np" ? "१४ करोड" : "14 Cr"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {language === "en" ? "Annual Budget" : "वार्षिक बजेट"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-[#DC143C]/10">
-              <CardContent className="pt-6 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#DC143C]/10 text-[#DC143C] mb-3">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-                <div className="text-2xl font-bold text-[#DC143C]">85%</div>
-                <p className="text-xs text-muted-foreground">
-                  {language === "en" ? "Budget Utilization" : "बजेट उपयोग"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-green-200">
-              <CardContent className="pt-6 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 mb-3">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div className="text-2xl font-bold text-green-600">
-                  {language === "np" ? "४५,६७२" : "45,672"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {language === "en" ? "Population" : "जनसंख्या"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-amber-200">
-              <CardContent className="pt-6 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 mb-3">
-                  <Building className="h-6 w-6" />
-                </div>
-                <div className="text-2xl font-bold text-amber-600">12</div>
-                <p className="text-xs text-muted-foreground">
-                  {language === "en" ? "Active Projects" : "सक्रिय परियोजना"}
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              { icon: IndianRupee, color: "#003893", bg: "bg-[#003893]/10", value: language === "np" ? "१४ करोड" : "14 Cr", label: language === "en" ? "Annual Budget" : "वार्षिक बजेट" },
+              { icon: TrendingUp,  color: "#DC143C", bg: "bg-[#DC143C]/10", value: "85%",    label: language === "en" ? "Budget Utilization" : "बजेट उपयोग" },
+              { icon: Users,       color: "#10B981", bg: "bg-green-100",    value: language === "np" ? "४५,६७२" : "45,672", label: language === "en" ? "Population" : "जनसंख्या" },
+              { icon: Building,    color: "#F59E0B", bg: "bg-amber-100",    value: "12",     label: language === "en" ? "Active Projects" : "सक्रिय परियोजना" },
+            ].map((stat, i) => (
+              <Card key={i} className="border-border/40">
+                <CardContent className="pt-6 text-center">
+                  <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg} mb-3`}>
+                    <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                </CardContent>
+              </Card>
+            ))}
           </motion.div>
 
-          {/* Charts Section */}
+          {/* Charts */}
           <div className="grid lg:grid-cols-2 gap-6 mb-12">
-            {/* Budget Trend */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
               <Card className="border-[#003893]/10">
                 <CardHeader>
                   <CardTitle className="text-[#003893]">
@@ -197,20 +140,11 @@ export default function ReportsPage() {
                       <BarChart data={yearlyBudgetData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                         <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#003893" }} />
-                        <YAxis 
-                          tick={{ fontSize: 12, fill: "#003893" }} 
-                          tickFormatter={(v) => `${(v/10000000).toFixed(0)}Cr`}
-                        />
-                        <Tooltip 
-                          formatter={(v: number) => `NPR ${(v/10000000).toFixed(2)} Cr`}
-                          contentStyle={{
-                            borderRadius: "12px",
-                            border: "1px solid #E5E7EB",
-                          }}
-                        />
+                        <YAxis tick={{ fontSize: 12, fill: "#003893" }} tickFormatter={v => `${(v/10000000).toFixed(0)}Cr`} />
+                        <Tooltip formatter={(v: number) => `NPR ${(v/10000000).toFixed(2)} Cr`} contentStyle={{ borderRadius: "12px", border: "1px solid #E5E7EB" }} />
                         <Legend />
-                        <Bar dataKey="budget" name={language === "np" ? "बजेट" : "Budget"} fill="#003893" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="expenditure" name={language === "np" ? "खर्च" : "Expenditure"} fill="#DC143C" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="budget" name={language === "np" ? "बजेट" : "Budget"} fill="#003893" radius={[4,4,0,0]} />
+                        <Bar dataKey="expenditure" name={language === "np" ? "खर्च" : "Expenditure"} fill="#DC143C" radius={[4,4,0,0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -218,12 +152,7 @@ export default function ReportsPage() {
               </Card>
             </motion.div>
 
-            {/* Sector Distribution */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
               <Card className="border-[#003893]/10">
                 <CardHeader>
                   <CardTitle className="text-[#003893]">
@@ -234,36 +163,11 @@ export default function ReportsPage() {
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={sectorWiseData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                        >
-                          {sectorWiseData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
+                        <Pie data={sectorWiseData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={2} dataKey="value" label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
+                          {sectorWiseData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                         </Pie>
-                        <Tooltip 
-                          formatter={(v) => `${v}%`}
-                          labelFormatter={(_, payload) => {
-                            if (payload && payload[0]) {
-                              const data = payload[0].payload
-                              return language === "np" ? data.nameNp : data.name
-                            }
-                            return ""
-                          }}
-                        />
-                        <Legend 
-                          formatter={(value, entry) => {
-                            const data = entry.payload as typeof sectorWiseData[0]
-                            return language === "np" ? data.nameNp : data.name
-                          }}
-                        />
+                        <Tooltip formatter={v => `${v}%`} labelFormatter={(_, payload) => payload?.[0] ? (language === "np" ? payload[0].payload.nameNp : payload[0].payload.name) : ""} />
+                        <Legend formatter={(_, entry) => language === "np" ? (entry.payload as any).nameNp : (entry.payload as any).name} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -273,12 +177,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Population Trend */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-12"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-12">
             <Card className="border-[#003893]/10">
               <CardHeader>
                 <CardTitle className="text-[#003893]">
@@ -291,27 +190,9 @@ export default function ReportsPage() {
                     <LineChart data={populationTrendData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                       <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#003893" }} />
-                      <YAxis 
-                        tick={{ fontSize: 12, fill: "#003893" }}
-                        domain={['dataMin - 1000', 'dataMax + 1000']}
-                        tickFormatter={(v) => `${(v/1000).toFixed(0)}K`}
-                      />
-                      <Tooltip 
-                        formatter={(v: number) => v.toLocaleString()}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "1px solid #E5E7EB",
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="population" 
-                        name={language === "np" ? "जनसंख्या" : "Population"}
-                        stroke="#003893" 
-                        strokeWidth={3}
-                        dot={{ fill: "#DC143C", strokeWidth: 2, r: 5 }}
-                        activeDot={{ r: 8, fill: "#DC143C" }}
-                      />
+                      <YAxis tick={{ fontSize: 12, fill: "#003893" }} domain={["dataMin - 1000", "dataMax + 1000"]} tickFormatter={v => `${(v/1000).toFixed(0)}K`} />
+                      <Tooltip formatter={(v: number) => v.toLocaleString()} contentStyle={{ borderRadius: "12px", border: "1px solid #E5E7EB" }} />
+                      <Line type="monotone" dataKey="population" name={language === "np" ? "जनसंख्या" : "Population"} stroke="#003893" strokeWidth={3} dot={{ fill: "#DC143C", strokeWidth: 2, r: 5 }} activeDot={{ r: 8, fill: "#DC143C" }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -320,11 +201,7 @@ export default function ReportsPage() {
           </motion.div>
 
           {/* Downloadable Reports */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
             <h2 className="text-2xl font-bold text-[#003893] mb-6">
               {language === "en" ? "Downloadable Reports" : "डाउनलोड गर्न सकिने प्रतिवेदनहरू"}
             </h2>
@@ -344,7 +221,7 @@ export default function ReportsPage() {
                     key={report.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
+                    transition={{ delay: 0.5 + index * 0.07 }}
                     whileHover={{ y: -4 }}
                     className="bg-white rounded-2xl p-5 shadow-sm border border-[#003893]/10 hover:shadow-md transition-all"
                   >
@@ -356,15 +233,23 @@ export default function ReportsPage() {
                         <h3 className="font-semibold text-[#003893] text-sm mb-1 line-clamp-2">
                           {language === "np" && report.title_np ? report.title_np : report.title_en}
                         </h3>
+                        {report.description_en && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                            {language === "np" && report.description_np ? report.description_np : report.description_en}
+                          </p>
+                        )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                           <Calendar className="h-3 w-3" />
-                          <span>{report.fiscal_year}</span>
-                          <span className="text-[#003893]">{formatFileSize(report.file_size)}</span>
+                          <span>FY {report.fiscal_year}</span>
+                          {report.file_size > 0 && (
+                            <span className="text-[#003893]">{formatFileSize(report.file_size)}</span>
+                          )}
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="w-full rounded-full border-[#003893]/20 text-[#003893] hover:bg-[#003893]/5"
+                          onClick={() => handleDownload(report)}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           {language === "en" ? "Download PDF" : "PDF डाउनलोड"}
@@ -376,6 +261,7 @@ export default function ReportsPage() {
               </div>
             )}
           </motion.div>
+
         </div>
       </main>
       <Footer />
