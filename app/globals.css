@@ -1,14 +1,14 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 /* Nepal Flag Colors Theme */
 :root {
-  --nepal-crimson: #DC143C;
+  --nepal-crimson: #dc143c;
   --nepal-blue: #003893;
-  --nepal-white: #FFFFFF;
-  
+  --nepal-white: #ffffff;
+
   --background: oklch(0.98 0.002 250);
   --foreground: oklch(0.15 0.02 260);
   --card: oklch(1 0 0);
@@ -25,8 +25,8 @@
   --accent-foreground: oklch(0.15 0.02 260);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.90 0.01 250);
-  --input: oklch(0.90 0.01 250);
+  --border: oklch(0.9 0.01 250);
+  --input: oklch(0.9 0.01 250);
   --ring: oklch(0.45 0.2 15);
   --chart-1: oklch(0.45 0.2 15);
   --chart-2: oklch(0.35 0.15 260);
@@ -40,7 +40,7 @@
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.96 0.02 250);
   --sidebar-accent-foreground: oklch(0.15 0.02 260);
-  --sidebar-border: oklch(0.90 0.01 250);
+  --sidebar-border: oklch(0.9 0.01 250);
   --sidebar-ring: oklch(0.45 0.2 15);
 }
 
@@ -80,8 +80,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -118,11 +118,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  
+
   /* Nepal specific colors */
-  --color-nepal-crimson: #DC143C;
+  --color-nepal-crimson: #dc143c;
   --color-nepal-blue: #003893;
-  --color-nepal-white: #FFFFFF;
+  --color-nepal-white: #ffffff;
 }
 
 @layer base {
@@ -171,15 +171,19 @@
 
 /* Gradient utilities */
 .gradient-nepal {
-  background: linear-gradient(135deg, #DC143C 0%, #003893 100%);
+  background: linear-gradient(135deg, #dc143c 0%, #003893 100%);
 }
 
 .gradient-nepal-light {
-  background: linear-gradient(135deg, rgba(220, 20, 60, 0.1) 0%, rgba(0, 56, 147, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(220, 20, 60, 0.1) 0%,
+    rgba(0, 56, 147, 0.1) 100%
+  );
 }
 
 .text-gradient-nepal {
-  background: linear-gradient(135deg, #DC143C 0%, #003893 100%);
+  background: linear-gradient(135deg, #dc143c 0%, #003893 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -187,8 +191,13 @@
 
 /* Animated gradient for hero */
 @keyframes gradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animate-gradient {
@@ -196,8 +205,11 @@
 }
 
 /* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+button,
+a,
+.hover-transition {
+  transition-property:
+    color, background-color, border-color, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }

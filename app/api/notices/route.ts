@@ -10,8 +10,9 @@ export async function GET() {
   try {
     const [notices]: any = await db.query(`
       SELECT * FROM notices 
-      WHERE (expiry_date IS NULL OR expiry_date >= CURDATE())
-      ORDER BY is_important DESC, publish_date DESC
+WHERE (expiry_date IS NULL OR expiry_date >= CURDATE())
+ORDER BY is_important DESC, publish_date DESC
+LIMIT 10
     `);
 
     return NextResponse.json({ success: true, data: notices });
@@ -69,12 +70,12 @@ export async function POST(request: NextRequest) {
         is_important ?? false,
         expiry_date ?? null,
         attachment_url ?? null,
-      ]
+      ],
     );
 
     const [newNotice]: any = await db.query(
       `SELECT * FROM notices WHERE id = ?`,
-      [result.insertId]
+      [result.insertId],
     );
 
     return NextResponse.json({

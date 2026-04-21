@@ -20,11 +20,12 @@ export async function GET(request: NextRequest) {
     const params: any[] = [];
 
     if (category && category !== "all") {
-      query += ` WHERE category = ?`;
+      query += ` WHERE category = ?`; // use $1 if PostgreSQL
       params.push(category);
     }
 
-    query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`;
+    query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC
+LIMIT 12`;
 
     const [items]: any = await db.query(query, params);
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { success: false, error: "Failed to fetch gallery items" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
         title_en, title_np, description_en, description_np,
         media_type, media_url, thumbnail_url, 
         category, event_date, is_featured
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // use $1..$10 if PostgreSQL
       [
         title_en,
         title_np ?? null,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         category ?? "general",
         event_date ?? null,
         is_featured ?? false,
-      ]
+      ],
     );
 
     const [newItem]: any = await db.query(
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: false, error: "Failed to create gallery item" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

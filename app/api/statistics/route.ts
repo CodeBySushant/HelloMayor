@@ -4,7 +4,10 @@ import { db } from "../../../lib/db";
 export async function GET() {
   try {
     const [statistics]: any = await db.query(
-      "SELECT * FROM ward_statistics WHERE is_active = true ORDER BY sort_order ASC",
+      `SELECT * FROM ward_statistics 
+ WHERE is_active = true 
+ ORDER BY sort_order ASC 
+ LIMIT 10`,
     );
 
     // Get aggregated stats from other tables
