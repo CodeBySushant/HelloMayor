@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
       ) as any;
     } else {
       [works] = await db.query(
-        `SELECT * FROM development_works ORDER BY created_at DESC`
+        `SELECT * FROM development_works 
+ORDER BY created_at DESC 
+LIMIT 10`
       ) as any;
     }
 
