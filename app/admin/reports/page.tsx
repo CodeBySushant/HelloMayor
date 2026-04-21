@@ -288,7 +288,7 @@ export default function AdminReportsPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
 
       {/* Toasts */}
       <div className="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none">
