@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const limit = searchParams.get("limit");
 
     let query = `
       SELECT id, title_en, title_np, description_en, description_np,
@@ -25,6 +26,11 @@ export async function GET(request: NextRequest) {
 
     query += ` ORDER BY is_featured DESC, sort_order ASC, created_at DESC`;
 
+    if (limit) {
+      query += ` LIMIT ?`;
+      params.push(Number(limit));
+    }
+
     const [items]: any = await db.query(query, params);
     return NextResponse.json({ success: true, data: items });
   } catch (error) {
@@ -37,7 +43,7 @@ export async function GET(request: NextRequest) {
 }
 
 // =======================
-// POST — Upload image to VPS then save URL in DB
+// POST — Upload file to VPS then save URL in DB
 // =======================
 export async function POST(request: NextRequest) {
   const authError = await requireAdmin();
@@ -57,31 +63,29 @@ export async function POST(request: NextRequest) {
 
     if (!title_en) {
       return NextResponse.json(
-        { success: false, error: "Title is required" },
+        { success: false, error: "Title (English) is required" },
         { status: 400 }
       );
     }
 
     let media_url = formData.get("media_url") as string | null;
 
-    // If a file was uploaded, send it to the VPS image server
+    // Upload file to VPS if provided
     if (file) {
       const vpsUrl = process.env.VPS_API_URL;
       if (!vpsUrl) {
         return NextResponse.json(
-          { success: false, error: "VPS_API_URL not configured" },
+          { success: false, error: "VPS_API_URL is not configured in .env" },
           { status: 500 }
         );
       }
 
       const vpsForm = new FormData();
-      vpsForm.append("image", file);
+      vpsForm.append("file", file);
 
-      const vpsRes = await fetch(`${vpsUrl}/upload`, {
+      const vpsRes = await fetch(`${vpsUrl}/api/upload`, {
         method: "POST",
-        headers: {
-          "x-api-key": process.env.VPS_API_KEY || "",
-        },
+        headers: { "x-api-key": process.env.VPS_API_KEY || "" },
         body: vpsForm,
       });
 
@@ -89,18 +93,18 @@ export async function POST(request: NextRequest) {
         const err = await vpsRes.text();
         console.error("VPS upload error:", err);
         return NextResponse.json(
-          { success: false, error: "Image upload to VPS failed" },
+          { success: false, error: "File upload to VPS failed" },
           { status: 502 }
         );
       }
 
       const vpsData = await vpsRes.json();
-      media_url = vpsData.url; // VPS returns { url: "https://..." }
+      media_url = vpsData.url;
     }
 
     if (!media_url) {
       return NextResponse.json(
-        { success: false, error: "Either a file or media_url is required" },
+        { success: false, error: "Provide either a file upload or a media_url" },
         { status: 400 }
       );
     }
@@ -118,9 +122,9 @@ export async function POST(request: NextRequest) {
         description_np ?? null,
         media_type,
         media_url,
-        media_url, // use same URL as thumbnail
+        media_url, // thumbnail = same URL for now
         category,
-        event_date ?? null,
+        event_date || null,
         is_featured,
       ]
     );
@@ -130,7 +134,7 @@ export async function POST(request: NextRequest) {
       [result.insertId]
     );
 
-    return NextResponse.json({ success: true, data: newItem[0] });
+    return NextResponse.json({ success: true, data: newItem[0] }, { status: 201 });
   } catch (error) {
     console.error("Gallery create error:", error);
     return NextResponse.json(
@@ -141,9 +145,9 @@ export async function POST(request: NextRequest) {
 }
 
 // =======================
-// PATCH (UPDATE metadata only)
+// PUT — Full update (metadata only, no file re-upload)
 // =======================
-export async function PATCH(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
@@ -151,40 +155,45 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { id, title_en, title_np, description_en, description_np, category, is_featured, event_date } = body;
 
-    if (!id) {
+    if (!id || !title_en) {
       return NextResponse.json(
-        { success: false, error: "ID required" },
+        { success: false, error: "id and title_en are required" },
         { status: 400 }
       );
     }
 
+    const [existing]: any = await db.query(
+      "SELECT id FROM gallery_items WHERE id = ?", [id]
+    );
+    if (!existing?.length) {
+      return NextResponse.json({ success: false, error: "Item not found" }, { status: 404 });
+    }
+
     await db.query(
       `UPDATE gallery_items SET
-        title_en       = COALESCE(?, title_en),
-        title_np       = COALESCE(?, title_np),
-        description_en = COALESCE(?, description_en),
-        description_np = COALESCE(?, description_np),
-        category       = COALESCE(?, category),
-        is_featured    = COALESCE(?, is_featured),
-        event_date     = COALESCE(?, event_date)
+        title_en       = ?,
+        title_np       = ?,
+        description_en = ?,
+        description_np = ?,
+        category       = ?,
+        is_featured    = ?,
+        event_date     = ?
       WHERE id = ?`,
       [
-        title_en ?? null,
+        title_en,
         title_np ?? null,
         description_en ?? null,
         description_np ?? null,
-        category ?? null,
-        is_featured !== undefined ? is_featured : null,
-        event_date ?? null,
+        category ?? "general",
+        is_featured ? 1 : 0,
+        event_date || null,
         id,
       ]
     );
 
     const [updated]: any = await db.query(
-      "SELECT * FROM gallery_items WHERE id = ?",
-      [id]
+      "SELECT * FROM gallery_items WHERE id = ?", [id]
     );
-
     return NextResponse.json({ success: true, data: updated[0] });
   } catch (error) {
     console.error("Gallery update error:", error);
@@ -196,7 +205,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 // =======================
-// DELETE — removes from DB and VPS
+// DELETE — removes from DB and VPS storage
 // =======================
 export async function DELETE(request: NextRequest) {
   const authError = await requireAdmin();
@@ -207,36 +216,33 @@ export async function DELETE(request: NextRequest) {
     const id = Number(searchParams.get("id"));
 
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: "ID required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "id is required" }, { status: 400 });
     }
 
-    // Fetch item to get its VPS URL before deleting
     const [rows]: any = await db.query(
-      "SELECT media_url FROM gallery_items WHERE id = ?",
-      [id]
+      "SELECT media_url FROM gallery_items WHERE id = ?", [id]
     );
 
-    if (rows.length > 0) {
-      const mediaUrl: string = rows[0].media_url;
-      const vpsUrl = process.env.VPS_API_URL;
+    if (!rows?.length) {
+      return NextResponse.json({ success: false, error: "Item not found" }, { status: 404 });
+    }
 
-      // Only call VPS delete if the URL is hosted on our VPS
-      if (vpsUrl && mediaUrl.startsWith(vpsUrl)) {
-        try {
-          await fetch(`${vpsUrl}/delete`, {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": process.env.VPS_API_KEY || "",
-            },
-            body: JSON.stringify({ url: mediaUrl }),
-          });
-        } catch (vpsErr) {
-          console.warn("VPS delete failed (non-fatal):", vpsErr);
-        }
+    const mediaUrl: string = rows[0].media_url;
+    const vpsUrl = process.env.VPS_API_URL;
+
+    // Delete from VPS storage only if URL belongs to our VPS
+    if (vpsUrl && mediaUrl.startsWith(vpsUrl)) {
+      try {
+        await fetch(`${vpsUrl}/api/delete`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": process.env.VPS_API_KEY || "",
+          },
+          body: JSON.stringify({ url: mediaUrl }),
+        });
+      } catch (vpsErr) {
+        console.warn("VPS delete failed (non-fatal):", vpsErr);
       }
     }
 

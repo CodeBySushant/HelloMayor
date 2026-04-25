@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion"
 import { useRef, useState } from "react"
 import { useLanguage } from "@/lib/language-context"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Play, X, Loader2, Image as ImageIcon } from "lucide-react"
+import { ArrowRight, Play, X, Loader2, Camera } from "lucide-react"
 import Link from "next/link"
 import useSWR from "swr"
 
@@ -13,15 +13,17 @@ interface GalleryItem {
   title_en: string
   title_np: string | null
   description_en: string | null
+  description_np: string | null
   media_type: string
   media_url: string
   category: string | null
+  event_date: string | null
   is_featured: boolean
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-const categories = [
+const CATEGORIES = [
   { id: "all", labelEn: "All", labelNp: "सबै" },
   { id: "events", labelEn: "Events", labelNp: "कार्यक्रम" },
   { id: "development", labelEn: "Development", labelNp: "विकास" },
@@ -34,18 +36,17 @@ export function GallerySection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeCategory, setActiveCategory] = useState("all")
-  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
+  const [lightboxItem, setLightboxItem] = useState<GalleryItem | null>(null)
 
-  const { data, isLoading } = useSWR<{ success: boolean; data: GalleryItem[] }>(
-    `/api/gallery?limit=6${activeCategory !== "all" ? `&category=${activeCategory}` : ""}`,
-    fetcher
-  )
+  const apiUrl = `/api/gallery?limit=6${activeCategory !== "all" ? `&category=${activeCategory}` : ""}`
+  const { data, isLoading } = useSWR<{ success: boolean; data: GalleryItem[] }>(apiUrl, fetcher)
 
-  const galleryItems = data?.data || []
+  const items = data?.data || []
 
   return (
     <section ref={ref} className="py-20 bg-gradient-to-b from-white to-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -55,7 +56,9 @@ export function GallerySection() {
           <div>
             <h2 className="text-3xl font-bold text-gradient-nepal">{t("mediaGallery")}</h2>
             <p className="text-muted-foreground mt-1">
-              {language === "en" ? "Photos and videos from our activities" : "हाम्रा गतिविधिहरूबाट फोटो र भिडियो"}
+              {language === "en"
+                ? "Photos and videos from our activities"
+                : "हाम्रा गतिविधिहरूबाट फोटो र भिडियो"}
             </p>
           </div>
           <Link href="/gallery">
@@ -71,16 +74,16 @@ export function GallerySection() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.1 }}
-          className="flex gap-2 mb-8 overflow-x-auto pb-2"
+          className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none"
         >
-          {categories.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat.id
-                  ? "gradient-nepal text-white"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-to-r from-[#DC143C] to-[#003893] text-white shadow-sm"
+                  : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
               }`}
             >
               {language === "np" ? cat.labelNp : cat.labelEn}
@@ -88,78 +91,79 @@ export function GallerySection() {
           ))}
         </motion.div>
 
-        {/* Loading State */}
+        {/* Loading */}
         {isLoading && (
-          <div className="flex justify-center py-20">
+          <div className="flex justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-[#DC143C]" />
           </div>
         )}
 
-        {/* Empty State */}
-        {!isLoading && galleryItems.length === 0 && (
+        {/* Empty */}
+        {!isLoading && items.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <Camera className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>{language === "en" ? "No media found" : "कुनै मिडिया फेला परेन"}</p>
           </div>
         )}
 
-        {/* Gallery Grid */}
-        {!isLoading && galleryItems.length > 0 && (
-          <motion.div layout className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {galleryItems.map((item, index) => (
+        {/* Grid */}
+        {!isLoading && items.length > 0 && (
+          <motion.div
+            layout
+            className="grid grid-cols-2 md:grid-cols-3 gap-4"
+          >
+            {items.map((item, index) => (
               <motion.div
                 key={item.id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.07 }}
                 whileHover={{ scale: 1.02 }}
-                onClick={() => setSelectedItem(item)}
+                onClick={() => setLightboxItem(item)}
                 className={`relative cursor-pointer rounded-2xl overflow-hidden group ${
-                  index === 0 ? "md:col-span-2 md:row-span-2 aspect-square md:aspect-auto" : "aspect-square"
+                  index === 0
+                    ? "md:col-span-2 md:row-span-2 aspect-[4/3]"
+                    : "aspect-square"
                 }`}
               >
-                {/* Placeholder Image */}
-                <div
-                  className={`absolute inset-0 ${
-                    index % 3 === 0
-                      ? "bg-gradient-to-br from-[#DC143C]/30 to-[#003893]/30"
-                      : index % 3 === 1
-                      ? "bg-gradient-to-br from-[#003893]/30 to-[#DC143C]/20"
-                      : "bg-gradient-to-br from-[#003893]/20 to-[#DC143C]/30"
-                  }`}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {item.media_type === "video" ? (
-                    <Play className="h-12 w-12 text-white/40" />
-                  ) : (
-                    <ImageIcon className="h-12 w-12 text-white/30" />
-                  )}
-                </div>
-
-                {/* Featured Badge */}
-                {item.is_featured && (
-                  <span className="absolute top-2 right-2 px-2 py-1 bg-[#DC143C] text-white text-xs rounded-full">
-                    {language === "en" ? "Featured" : "विशेष"}
-                  </span>
+                {/* Real media */}
+                {item.media_type === "video" ? (
+                  <video
+                    src={item.media_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    preload="metadata"
+                  />
+                ) : (
+                  <img
+                    src={item.media_url}
+                    alt={language === "np" && item.title_np ? item.title_np : item.title_en}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
                 )}
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                {/* Video Play Button */}
+                {/* Video overlay */}
                 {item.media_type === "video" && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="h-6 w-6 text-[#DC143C] ml-1" fill="currentColor" />
+                    <div className="h-12 w-12 rounded-full bg-white/90 shadow flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Play className="h-5 w-5 text-[#DC143C] ml-0.5" fill="currentColor" />
                     </div>
                   </div>
                 )}
 
-                {/* Title */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform">
-                  <p className="text-white font-medium text-sm">
+                {/* Featured badge */}
+                {item.is_featured && (
+                  <span className="absolute top-2 right-2 px-2 py-0.5 bg-[#DC143C] text-white text-xs rounded-full">
+                    {language === "en" ? "Featured" : "विशेष"}
+                  </span>
+                )}
+
+                {/* Hover overlay + title */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                  <p className="text-white font-medium text-sm line-clamp-1">
                     {language === "np" && item.title_np ? item.title_np : item.title_en}
                   </p>
                 </div>
@@ -167,44 +171,61 @@ export function GallerySection() {
             ))}
           </motion.div>
         )}
-
-        {/* Lightbox */}
-        {selectedItem && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setSelectedItem(null)}
-          >
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="max-w-4xl w-full">
-              <div className="aspect-video rounded-2xl gradient-nepal flex items-center justify-center mb-4">
-                {selectedItem.media_type === "video" ? (
-                  <Play className="h-20 w-20 text-white/40" />
-                ) : (
-                  <ImageIcon className="h-20 w-20 text-white/30" />
-                )}
-              </div>
-              <div className="text-center">
-                <h3 className="text-white text-xl font-semibold">
-                  {language === "np" && selectedItem.title_np ? selectedItem.title_np : selectedItem.title_en}
-                </h3>
-                {selectedItem.description_en && (
-                  <p className="text-white/60 mt-2">
-                    {selectedItem.description_en}
-                  </p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
+
+      {/* ── Lightbox ───────────────────────────────────────────── */}
+      {lightboxItem && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center p-4"
+          onClick={() => setLightboxItem(null)}
+        >
+          <button
+            onClick={() => setLightboxItem(null)}
+            className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div
+            className="max-w-4xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-2xl overflow-hidden bg-black">
+              {lightboxItem.media_type === "video" ? (
+                <video
+                  src={lightboxItem.media_url}
+                  className="w-full max-h-[70vh] object-contain"
+                  controls
+                  autoPlay
+                />
+              ) : (
+                <img
+                  src={lightboxItem.media_url}
+                  alt={lightboxItem.title_en}
+                  className="w-full max-h-[70vh] object-contain"
+                />
+              )}
+            </div>
+            <div className="text-center mt-4">
+              <h3 className="text-white text-lg font-semibold">
+                {language === "np" && lightboxItem.title_np
+                  ? lightboxItem.title_np
+                  : lightboxItem.title_en}
+              </h3>
+              {(lightboxItem.description_en || lightboxItem.description_np) && (
+                <p className="text-white/60 text-sm mt-1">
+                  {language === "np" && lightboxItem.description_np
+                    ? lightboxItem.description_np
+                    : lightboxItem.description_en}
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
     </section>
   )
 }
